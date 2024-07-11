@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios'
 import axiosRetry from 'axios-retry'
+import { randomDelay } from '../utils'
 
 type Handler = <TData>(url: string, config?: AxiosRequestConfig) => Promise<TData>
 type Props = {
@@ -14,7 +15,7 @@ const retryErrors = [
   AxiosError.ERR_CANCELED,
 ]
 
-const retryErrorCodes = [401, 408, 429, 500, 502, 503, 504, 520, 521, 525]
+const retryErrorCodes = [400, 401, 408, 429, 500, 502, 503, 504, 520, 521, 525]
 
 export class Axios {
   readonly instance
@@ -29,8 +30,16 @@ export class Axios {
       timeout: 1000 * 150,
     })
 
+    this.instance.interceptors.request.use(async (config) => {
+      await randomDelay()
+      return config
+    })
+
     this.instance.interceptors.response.use(
-      (response) => response,
+      async (response) => {
+        await randomDelay()
+        return response
+      },
       async (e) => {
         const apiError = e?.response?.data?.[1] || e?.response?.data?.[0]
         if (apiError) throw apiError
