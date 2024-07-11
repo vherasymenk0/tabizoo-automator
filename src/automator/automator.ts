@@ -28,12 +28,12 @@ export class Automator extends TGClient {
   async init() {
     const { stringData } = await this.getTgData()
 
-    this.ax.instance.defaults.headers['X-Telegram-Auth'] = stringData
+    this.ax.instance.defaults.headers.Rawdata = stringData
     await wait()
   }
 
   async example() {
-    await Api.getExample(this.ax)
+    await Api.getInfo(this.ax)
     await wait()
 
     log.success('Successfully get example', this.client.name)
