@@ -10,9 +10,9 @@ const settings = {
 export const config = {
   settings,
   info: {
-    origin: '',
-    api: '',
-    userName: '',
-    shortName: '',
+    origin: 'app.tabibot.com',
+    api: 'app.tabibot.com/api',
+    userName: 'tabizoobot',
+    shortName: 'tabizoo',
   },
 }
