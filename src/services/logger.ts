@@ -27,7 +27,17 @@ class Logger {
       levels: this.levels,
       level: 'debug',
       format: format.combine(
-        format.timestamp({ format: 'HH:mm:ss' }),
+        format.timestamp({
+          format: () => {
+            return new Date().toLocaleString('en-US', {
+              timeZone: 'Europe/Kiev',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric',
+              hourCycle: 'h23',
+            })
+          },
+        }),
         format.errors({ stack: true }),
         this.customFormat,
       ),
