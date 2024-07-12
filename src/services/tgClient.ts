@@ -58,7 +58,7 @@ export class TGClient {
           timeUntilRevalidation % 60,
         ]
 
-        log.info(`Used cached tg web data | Cache will be revalidated in [${h}h:${m}m:${s}s]`, name)
+        log.info(`Cache will be revalidated in [${h}h:${m}m:${s}s]`, name)
         return { id: id, stringData, username }
       }
     }

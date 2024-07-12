@@ -14,14 +14,17 @@ export const runAutomator = async () => {
     try {
       await automator.start()
 
-      // example every 7 hours
-      const exampleExpression = '0 */7 * * *'
+      // example every 5 hours
+      const exampleExpression = '0 */5 * * *'
       log.info(`Next claim time: ${getNextCroneDate(exampleExpression)}`, name)
-      cron.schedule(exampleExpression, async () => {
-        await automator.init()
-        await automator.example()
-        log.info(`Next claim time: ${getNextCroneDate(exampleExpression)}`, name)
-      })
+      cron.schedule(
+        exampleExpression,
+        async () => {
+          await automator.start()
+          log.info(`Next claim time: ${getNextCroneDate(exampleExpression)}`, name)
+        },
+        { timezone: 'Europe/Kiev' },
+      )
     } catch (error) {
       await catchError(error, name)
     }

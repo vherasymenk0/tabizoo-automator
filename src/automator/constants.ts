@@ -21,5 +21,6 @@ export const API_MAP = {
   signIn: '/user/sign-in',
   info: '/mining/info',
   checkIn: '/user/check-in',
-  lvlUp: '/user/lvl-up',
+  lvlUp: '/user/level-up',
+  claim: '/mining/claim',
 } as const

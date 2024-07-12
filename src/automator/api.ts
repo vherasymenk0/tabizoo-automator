@@ -34,6 +34,14 @@ class ApiService {
       throw new Error(`Api | checkIn() | ${e}`)
     }
   }
+
+  async claim(axios: Axios) {
+    try {
+      return await axios.post<boolean>(API_MAP.claim)
+    } catch (e) {
+      throw new Error(`Api | claim() | ${e}`)
+    }
+  }
 }
 
 export const Api = new ApiService()
