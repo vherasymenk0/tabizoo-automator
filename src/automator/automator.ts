@@ -87,6 +87,7 @@ export class Automator extends TGClient {
     const { level } = await Api.lvlUp(this.ax)
     if (level > this.lvl) {
       this.log.success(`Upgrade successful. New LVL: \x1b[0m${level}\x1b`)
+      this.lvl = level
       return this.lvlUp()
     } else this.log.warn('Not enough point to upgrade')
   }
