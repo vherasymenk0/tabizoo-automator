@@ -1,11 +1,14 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios'
 import axiosRetry from 'axios-retry'
 import { randomDelay } from '../utils'
+import { log } from './logger'
+import chalk from 'chalk'
 
 type Handler = <TData>(url: string, config?: AxiosRequestConfig) => Promise<TData>
 type Props = {
   config?: AxiosRequestConfig
   proxyString?: string | null
+  id?: string
 }
 
 const retryErrors = [
@@ -15,7 +18,7 @@ const retryErrors = [
   AxiosError.ERR_CANCELED,
 ]
 
-const retryErrorCodes = [400, 401, 408, 429, 500, 502, 503, 504, 520, 521, 525]
+const retryErrorStatuses = [400, 408, 429, 502, 503, 504, 520, 521, 525]
 
 export class Axios {
   readonly instance
@@ -30,6 +33,31 @@ export class Axios {
       timeout: 1000 * 150,
     })
 
+    axiosRetry(this.instance, {
+      retries: 3,
+      retryDelay: (...arg) => axiosRetry.exponentialDelay(...arg, 3000),
+      retryCondition(e) {
+        if (e?.response?.status && e?.response?.statusText) {
+          if (retryErrorStatuses.includes(e.response.status)) {
+            log.error(
+              `${e.response.status}: ${e.response.statusText}. ${chalk.white('Retrying...')}`,
+              props?.id,
+            )
+            return true
+          }
+        }
+
+        if (e?.code) {
+          if (retryErrors.includes(e.code)) {
+            log.error(`${String(e.code)}: ${e.message}. ${chalk.white('Retrying...')}`, props?.id)
+            return true
+          }
+        }
+
+        return false
+      },
+    })
+
     this.instance.interceptors.request.use(async (config) => {
       await randomDelay()
       return config
@@ -41,26 +69,11 @@ export class Axios {
         return response
       },
       async (e) => {
-        const apiError = e?.response?.data?.[1] || e?.response?.data?.[0]
+        const apiError = e?.response?.data?.error?.message || e?.response?.data?.error?.text
         if (apiError) throw apiError
-
-        if (e?.code && retryErrors.includes(e.code)) throw e
-        if (e?.response?.status) throw e
-
         throw e
       },
     )
-
-    axiosRetry(this.instance, {
-      retries: 10,
-      retryDelay: (...arg) => axiosRetry.exponentialDelay(...arg, 3000),
-      retryCondition(e) {
-        if (e?.code) return retryErrors.includes(e.code)
-        if (e?.response?.status) return retryErrorCodes.includes(e.response.status)
-
-        return false
-      },
-    })
   }
 
   async makeRequest(method: string, url: string, options: AxiosRequestConfig = {}) {

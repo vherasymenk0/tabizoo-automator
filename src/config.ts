@@ -5,6 +5,9 @@ const settings = {
   api_hash: getEnvVar('API_HASH'),
   with_cache: stringToBoolean(getEnvVar('WITH_CACHE', 'true')),
   use_proxy: stringToBoolean(getEnvVar('USE_PROXY', 'true')),
+  chat_id: getEnvVar('CHAT_ID', null),
+  topic_id: getEnvVar('TOPIC_ID', null),
+  bot: getEnvVar('BOT', null),
 }
 
 export const config = {

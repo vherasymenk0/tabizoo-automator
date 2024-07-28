@@ -1,10 +1,11 @@
 import { AUTOMATOR_AXIOS_CONFIG } from './constants'
 import { AxiosRequestConfig } from 'axios'
-import { Axios, log, Proxy, TGClient } from '../services'
+import { Axios, log, Proxy, TGClient, TGNotifier } from '../services'
 import { AccountModel } from '../interfaces'
 import { Api } from './api'
 import { formatNum } from '../helpers'
 import { msToTime } from '../utils'
+import { config } from '../config'
 
 export class Automator extends TGClient {
   private readonly ax: Axios
@@ -13,11 +14,24 @@ export class Automator extends TGClient {
   private coinsToClaim: null | number = 0
   private isClaimAvailable = false
   private hasCheckedIn = false
+  private logs: string = ''
   private log = {
-    warn: (msg: string) => log.warn(msg, this.client.name),
-    success: (msg: string) => log.success(msg, this.client.name),
-    error: (msg: string) => log.error(msg, this.client.name),
-    info: (msg: string) => log.info(msg, this.client.name),
+    warn: (msg: string) => {
+      this.logs += `[Warning]: ${msg}\n`
+      log.warn(msg, this.client.name)
+    },
+    success: (msg: string) => {
+      this.logs += `[Success]: ${msg}\n`
+      log.success(msg, this.client.name)
+    },
+    error: (msg: string) => {
+      this.logs += `[Error]: ${msg}\n`
+      log.error(msg, this.client.name)
+    },
+    info: (msg: string) => {
+      this.logs += `[Info]: ${msg}\n`
+      log.info(msg, this.client.name)
+    },
   }
 
   constructor(props: AccountModel) {
@@ -34,10 +48,27 @@ export class Automator extends TGClient {
     this.ax = new Axios({
       config: axiosConfig,
       proxyString: props.proxyString,
+      id: props.name,
     })
   }
 
+  async sendLogs() {
+    const name = this.client.webData?.username || this.client.name
+    const title = `<b>#Tabizoo ${name}</b>\n\n`
+    const message = title + this.logs
+
+    if (this.client.getLogs) await TGNotifier.sendMessage(message, this.client.webData?.id)
+    else await TGNotifier.sendMessage(message)
+    this.logs = ''
+  }
+
+  private async checkProxy() {
+    if (this.client.proxyString && config.settings.use_proxy)
+      await Proxy.check(this.client.proxyString, this.client.name)
+  }
+
   async login() {
+    await this.checkProxy()
     const { stringData } = await this.getTgData()
     this.ax.instance.defaults.headers.Rawdata = stringData
 
@@ -45,10 +76,7 @@ export class Automator extends TGClient {
     this.hasCheckedIn = user.hasCheckedIn
     this.lvl = user.level
 
-    const coins = `\x1b[0m${formatNum(user.coins)}\x1b[36m`
-    const level = `\x1b[0m${user.level}\x1b[36m`
-    const streak = `\x1b[0m${user.streak}\x1b[36m`
-    this.log.info(`Coins: ${coins} | Lvl: ${level} | Streak: ${streak}`)
+    this.log.info(`Coins: ${formatNum(user.coins)} | Lvl: ${user.level} | Streak: ${user.streak}`)
   }
 
   async checkIn() {
@@ -65,20 +93,15 @@ export class Automator extends TGClient {
 
     if (info.current === info.topLimit) this.coinsToClaim = info.current
 
-    const current = `\x1b[0m${formatNum(info.current)}\x1b[36m`
-    const topLimit = `\x1b[0m${formatNum(info.topLimit)}\x1b[36m`
-    const rate = `\x1b[0m${formatNum(info.rate)}\x1b[36m`
-    const referralRate = `\x1b[0m${formatNum(info.referralRate)}\x1b[36m`
-    let msg = `Mined ${current} of ${topLimit} | EPH: ${rate}`
-    if (info.referralRate > 0) msg += referralRate
+    let msg = `Mined ${formatNum(info.current)} of ${formatNum(info.topLimit)} | EPH: ${formatNum(info.rate)}`
+    if (info.referralRate > 0) msg += formatNum(info.referralRate)
     this.log.info(msg)
   }
 
   async claim() {
     const isClaimed = await Api.claim(this.ax)
     if (isClaimed) {
-      const count = `\x1b[0m${formatNum(this.coinsToClaim as number)}\x1b`
-      this.log.success(`Successfully claimed! +${count}`)
+      this.log.success(`Successfully claimed! +${formatNum(this.coinsToClaim as number)}`)
       this.coinsToClaim = null
     } else this.log.warn('Something went wrong while claiming')
   }
@@ -86,7 +109,7 @@ export class Automator extends TGClient {
   async lvlUp(): Promise<void> {
     const { level } = await Api.lvlUp(this.ax)
     if (level > this.lvl) {
-      this.log.success(`Upgrade successful. New LVL: \x1b[0m${level}\x1b`)
+      this.log.success(`Upgrade successful. New LVL: ${level}`)
       this.lvl = level
       return this.lvlUp()
     } else this.log.warn('Not enough point to upgrade')
@@ -105,5 +128,6 @@ export class Automator extends TGClient {
     }
 
     await this.lvlUp()
+    await this.sendLogs()
   }
 }

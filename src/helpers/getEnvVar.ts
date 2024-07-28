@@ -3,7 +3,10 @@ import { log } from '../services'
 
 dotenv.config()
 
-export const getEnvVar = <T extends keyof NodeJS.ProcessEnv>(name: T, defaultValue?: string) => {
+export const getEnvVar = <T extends keyof NodeJS.ProcessEnv>(
+  name: T,
+  defaultValue?: string | null,
+) => {
   try {
     const value = process.env[name]
 
