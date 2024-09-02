@@ -1,11 +1,20 @@
-import { AUTOMATOR_AXIOS_CONFIG } from './constants'
 import { AxiosRequestConfig } from 'axios'
-import { Axios, log, Proxy, TGClient, TGNotifier } from '../services'
-import { AccountModel } from '../interfaces'
-import { Api } from './api'
-import { formatNum } from '../helpers'
-import { msToTime } from '../utils'
 import { config } from '../config'
+import { formatNum } from '../helpers'
+import { AccountModel } from '../interfaces'
+import { Axios, log, Proxy, TGClient, TGNotifier } from '../services'
+import { msToTime } from '../utils'
+import { Api } from './api'
+import { AUTOMATOR_AXIOS_CONFIG } from './constants'
+
+function getTodayDate() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
 
 export class Automator extends TGClient {
   private readonly ax: Axios
@@ -73,28 +82,38 @@ export class Automator extends TGClient {
     this.ax.instance.defaults.headers.Rawdata = stringData
 
     const { user } = await Api.signIn(this.ax)
-    this.hasCheckedIn = user.hasCheckedIn
+    const currentDate = getTodayDate()
+
+    this.hasCheckedIn = currentDate === user.check_in_date
     this.lvl = user.level
 
     this.log.info(`Coins: ${formatNum(user.coins)} | Lvl: ${user.level} | Streak: ${user.streak}`)
   }
 
   async checkIn() {
-    const { hasCheckedIn, streak } = await Api.checkIn(this.ax)
+    const {
+      user: { check_in_date, streak },
+    } = await Api.checkInAds(this.ax)
+    const currentDate = getTodayDate()
+
+    const hasCheckedIn = currentDate === check_in_date
 
     if (hasCheckedIn) this.log.success(`Successfully checked in. Streak: \x1b[33m${streak}\x1b`)
     else this.log.warn('Something went wrong while check in')
   }
 
   async getMiningInfo() {
-    const info = await Api.getInfo(this.ax)
-    this.nextClaimTimeInSecond = info.nextClaimTimeInSecond
-    this.isClaimAvailable = info.nextClaimTimeInSecond === 0
+    const { top_limit, current, rate, referral_rate, next_claim_timestamp } = await Api.getInfo(
+      this.ax,
+    )
+    const nextClaimTimeInSecond = next_claim_timestamp / 1000000
+    this.nextClaimTimeInSecond = nextClaimTimeInSecond
+    this.isClaimAvailable = nextClaimTimeInSecond === 0
 
-    if (info.current === info.topLimit) this.coinsToClaim = info.current
+    if (current === top_limit) this.coinsToClaim = current
 
-    let msg = `Mined ${formatNum(info.current)} of ${formatNum(info.topLimit)} | EPH: ${formatNum(info.rate)}`
-    if (info.referralRate > 0) msg += formatNum(info.referralRate)
+    let msg = `Mined ${formatNum(current)} of ${formatNum(top_limit)} | EPH: ${formatNum(rate)}`
+    if (referral_rate > 0) msg += formatNum(referral_rate)
     this.log.info(msg)
   }
 

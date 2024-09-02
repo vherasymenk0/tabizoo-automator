@@ -1,11 +1,12 @@
-import { CheckInModel, InfoModel, LvlUpModel, SignInModel } from './interfaces'
-import { API_MAP } from './constants'
 import { Axios } from '../services'
+import { API_MAP } from './constants'
+import { CheckInModel, InfoModel, LvlUpModel, SignInModel } from './interfaces'
 
 class ApiService {
   async getInfo(axios: Axios) {
     try {
-      return await axios.get<InfoModel>(API_MAP.info)
+      const { data } = await axios.get<InfoModel>(API_MAP.info)
+      return data.mining_data
     } catch (e) {
       throw new Error(`Api | getInfo() | ${e}`)
     }
@@ -13,7 +14,8 @@ class ApiService {
 
   async signIn(axios: Axios) {
     try {
-      return await axios.post<SignInModel>(API_MAP.signIn)
+      const { data } = await axios.post<SignInModel>(API_MAP.signIn)
+      return data
     } catch (e) {
       throw new Error(`Api | signIn() | ${e}`)
     }
@@ -21,7 +23,8 @@ class ApiService {
 
   async lvlUp(axios: Axios) {
     try {
-      return await axios.post<LvlUpModel>(API_MAP.lvlUp)
+      const { data } = await axios.post<LvlUpModel>(API_MAP.lvlUp)
+      return data.user
     } catch (e) {
       throw new Error(`Api | lvlUp() | ${e}`)
     }
@@ -29,7 +32,19 @@ class ApiService {
 
   async checkIn(axios: Axios) {
     try {
-      return await axios.post<CheckInModel>(API_MAP.checkIn)
+      const { data } = await axios.post<CheckInModel>(API_MAP.checkIn)
+      return data
+    } catch (e) {
+      throw new Error(`Api | checkIn() | ${e}`)
+    }
+  }
+
+  async checkInAds(axios: Axios) {
+    try {
+      const { data } = await axios.post<CheckInModel>(API_MAP.checkInAds, {
+        data: { check_in_status: 1 },
+      })
+      return data
     } catch (e) {
       throw new Error(`Api | checkIn() | ${e}`)
     }

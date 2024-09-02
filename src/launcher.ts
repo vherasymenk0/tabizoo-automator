@@ -1,8 +1,8 @@
-import { launchPrompt, manageAccountPrompts } from './prompts'
-import { FLAG_ENUM, LAUNCH_MODE_ENUM, MANAGE_ACCOUNT_ENUM } from './enums'
-import { runAutomator } from './automator'
-import { Account } from './services'
 import * as process from 'node:process'
+import { runAutomator } from './automator'
+import { FLAG_ENUM, LAUNCH_MODE_ENUM, MANAGE_ACCOUNT_ENUM } from './enums'
+import { launchPrompt, manageAccountPrompts } from './prompts'
+import { Account } from './services'
 
 export const launcher = async (flag?: string) => {
   const runManager = async (): Promise<void> => {

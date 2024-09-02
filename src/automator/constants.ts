@@ -18,9 +18,10 @@ export const AUTOMATOR_AXIOS_CONFIG = {
 }
 
 export const API_MAP = {
-  signIn: '/user/sign-in',
-  info: '/mining/info',
-  checkIn: '/user/check-in',
-  lvlUp: '/user/level-up',
-  claim: '/mining/claim',
+  signIn: '/user/v1/sign-in',
+  info: '/mining/v1/info',
+  checkIn: '/user/v1/check-in',
+  checkInAds: '/user/v1/check-in-ad',
+  lvlUp: '/user/v1/level-up',
+  claim: '/mining/v1/claim',
 } as const

@@ -4,8 +4,15 @@
   "parserOptions": {
     "project": "./tsconfig.eslint.json"
   },
-  "plugins": ["@typescript-eslint", "prettier", "import"],
-  "extends": ["airbnb-typescript/base", "prettier"],
+  "plugins": [
+    "@typescript-eslint",
+    "prettier",
+    "import"
+  ],
+  "extends": [
+    "airbnb-typescript/base",
+    "prettier"
+  ],
   "settings": {
     "settings": {
       "import/resolver": {
@@ -26,7 +33,13 @@
     "consistent-return": "off",
     "no-underscore-dangle": 0,
     "prettier/prettier": 2,
-    "semi": [ "error", "never" ],
-    "semi-style": ["error", "last"]
+    "semi": [
+      "error",
+      "never"
+    ],
+    "semi-style": [
+      "error",
+      "last"
+    ]
   }
 }
